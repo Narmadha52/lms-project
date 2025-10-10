@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LMS - Home</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div th:replace="fragments/nav :: *"></div>
+<main class="container">
+    <h1>Latest Courses</h1>
+    <div class="grid" th:if="${latestCourses} != null">
+        <div class="card" th:each="c : ${latestCourses}">
+            <div class="card-body">
+                <h3 th:text="${c.title}">Course title</h3>
+                <p th:text="${c.description}">Description</p>
+                <a th:href="@{'/courses'(id=${c.id})}" class="btn">View</a>
+            </div>
+        </div>
+    </div>
+</main>
+<script th:src="@{/js/script.js}"></script>
+</body>
+</html>
+
+
