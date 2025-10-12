@@ -10,8 +10,7 @@
     "env": {
       "DB_USERNAME": "root",
       "DB_PASSWORD": "9345789271",
-      "DATABASE_URL": "jdbc:mysql://<your-db-host>:3306/lms_db?useSSL=false&serverTimezone=UTC"
+      "DATABASE_URL": "jdbc:mysql://containers-us-west-123.railway.app:3306/lms_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true"
     }
   }
 }
-
