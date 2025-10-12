@@ -11,7 +11,7 @@ COPY mvnw pom.xml ./
 # Make Maven wrapper executable
 RUN chmod +x ./mvnw
 
-# Download dependencies
+# Download dependencies offline
 RUN ./mvnw dependency:go-offline -B
 
 # Copy source code
@@ -20,9 +20,13 @@ COPY src ./src
 # Build the application
 RUN ./mvnw clean package -DskipTests
 
-# Expose port
-EXPOSE 8080
+# Expose port 8090 (Spring Boot default)
+EXPOSE 8090
 
-# Run the application
+# Environment variables (Railway injects actual values in production)
+ENV DB_USERNAME=${DB_USERNAME}
+ENV DB_PASSWORD=${DB_PASSWORD}
+ENV DATABASE_URL=${DATABASE_URL}
+
+# Run the Spring Boot application
 CMD ["java", "-jar", "target/lms-backend-0.0.1-SNAPSHOT.jar"]
-
