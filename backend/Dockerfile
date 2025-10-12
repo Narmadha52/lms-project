@@ -21,7 +21,7 @@ COPY src ./src
 RUN ./mvnw clean package -DskipTests
 
 # Expose port 8090 (Spring Boot default)
-EXPOSE 8099
+EXPOSE 8080
 
 # Environment variables (Railway injects actual values in production)
 ENV DB_USERNAME=${DB_USERNAME}
