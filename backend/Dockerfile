@@ -11,8 +11,8 @@ COPY mvnw pom.xml ./
 # Make Maven wrapper executable
 RUN chmod +x ./mvnw
 
-# Download dependencies offline
-RUN ./mvnw dependency:go-offline -B
+# Download dependencies (go-offline doesn't work perfectly, using resolve instead)
+RUN ./mvnw dependency:resolve -B
 
 # Copy source code
 COPY src ./src
@@ -20,7 +20,7 @@ COPY src ./src
 # Build the application
 RUN ./mvnw clean package -DskipTests
 
-# Expose port 8090 (Spring Boot default)
+# Expose port 8080 (Spring Boot default)
 EXPOSE 8080
 
 # Environment variables (Railway injects actual values in production)
