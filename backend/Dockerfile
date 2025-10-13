@@ -5,8 +5,8 @@ FROM openjdk:17-jdk-slim
 WORKDIR /app
 
 # Copy Maven wrapper and pom.xml
-COPY backend/.mvn/ .mvn/
-COPY backend/mvnw backend/pom.xml ./
+COPY .mvn/ .mvn/
+COPY mvnw pom.xml ./
 
 # Make Maven wrapper executable
 RUN chmod +x ./mvnw
@@ -15,7 +15,7 @@ RUN chmod +x ./mvnw
 RUN ./mvnw dependency:resolve -B
 
 # Copy source code
-COPY backend/src ./src
+COPY src ./src
 
 # Build the application
 RUN ./mvnw clean package -DskipTests
