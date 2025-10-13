@@ -5,25 +5,25 @@ FROM openjdk:17-jdk-slim
 WORKDIR /app
 
 # Copy Maven wrapper and pom.xml
-COPY .mvn/ .mvn/
-COPY mvnw pom.xml ./
+COPY backend/.mvn/ .mvn/
+COPY backend/mvnw backend/pom.xml ./
 
 # Make Maven wrapper executable
 RUN chmod +x ./mvnw
 
-# Download dependencies (go-offline doesn't work perfectly, using resolve instead)
+# Download dependencies offline
 RUN ./mvnw dependency:resolve -B
 
 # Copy source code
-COPY src ./src
+COPY backend/src ./src
 
 # Build the application
 RUN ./mvnw clean package -DskipTests
 
-# Expose port 8080 (Spring Boot default)
+# Expose port 8080
 EXPOSE 8080
 
-# Environment variables (Railway injects actual values in production)
+# Environment variables
 ENV DB_USERNAME=${DB_USERNAME}
 ENV DB_PASSWORD=${DB_PASSWORD}
 ENV DATABASE_URL=${DATABASE_URL}
