@@ -3,7 +3,9 @@ builder = "DOCKERFILE"
 dockerfilePath = "backend/Dockerfile"
 
 [deploy]
-startCommand = "cd backend && java -jar target/lms-backend-0.0.1-SNAPSHOT.jar"
+startCommand = "java -jar target/lms-backend-0.0.1-SNAPSHOT.jar"
 
-[service]
-source = "backend"
+[variables]
+DB_USERNAME = "root"
+DB_PASSWORD = "9365799271"
+DATABASE_URL = "jdbc:mysql://containers-us-west-123.railway.app:3306/railway?useSSL=false"
