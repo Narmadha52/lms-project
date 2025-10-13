@@ -1,6 +1,6 @@
 [build]
 builder = "DOCKERFILE"
-dockerfilePath = "backend/Dockerfile"
+dockerfilePath = "./Dockerfile"
 
 [deploy]
 startCommand = "java -jar target/lms-backend-0.0.1-SNAPSHOT.jar"
