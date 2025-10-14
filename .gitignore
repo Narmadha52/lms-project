@@ -153,3 +153,4 @@ Thumbs.db
 application-local.properties
 application-prod.properties
 
+"frontend/build/" 
