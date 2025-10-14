@@ -154,3 +154,4 @@ application-local.properties
 application-prod.properties
 
 "frontend/build/" 
+frontend/build/ 
