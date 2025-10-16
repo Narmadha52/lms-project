@@ -1,32 +1,23 @@
-# Use OpenJDK 17 as base image
-FROM openjdk:17-jdk-slim
+# Use Node 18 LTS
+FROM node:18-alpine
 
-# Set working directory
 WORKDIR /app
 
-# Copy Maven wrapper and pom.xml from backend
-COPY backend/.mvn/ .mvn/
-COPY backend/mvnw backend/pom.xml ./
+# Copy package files and install dependencies
+COPY package.json package-lock.json ./
+RUN npm install
 
-# Make Maven wrapper executable
-RUN chmod +x ./mvnw
+# Copy source code
+COPY . .
 
-# Download dependencies
-RUN ./mvnw dependency:resolve -B
+# Build React app
+RUN npm run build
 
-# Copy source code from backend
-COPY backend/src ./src
+# Install lightweight server to serve static files
+RUN npm install -g serve
 
-# Build the application
-RUN ./mvnw clean package -DskipTests
+# Expose port 3000
+EXPOSE 3000
 
-# Expose port 8080
-EXPOSE 8080
-
-# Environment variables (Railway will inject these)
-ENV DB_USERNAME=${DB_USERNAME}
-ENV DB_PASSWORD=${DB_PASSWORD}
-ENV DATABASE_URL=${DATABASE_URL}
-
-# Run the Spring Boot application
-CMD ["java", "-jar", "target/lms-backend-0.0.1-SNAPSHOT.jar"]
+# Start React app
+CMD ["serve", "-s", "build", "-l", "3000"]
