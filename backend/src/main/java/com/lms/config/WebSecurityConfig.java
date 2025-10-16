@@ -75,9 +75,10 @@ public class WebSecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // IMPORTANT: Preflight requests must be allowed
                         .requestMatchers("/api/auth/signin", "/api/auth/signup").permitAll()
-                        .requestMatchers("/", "/dashboard", "/courses", "/my-courses", "/assignments", "/quizzes", "/achievements", "/profile").permitAll()
+                        // Note: The following paths are likely internal frontend routes, so they don't need to be permitAll on the backend:
+                        // .requestMatchers("/", "/dashboard", "/courses", "/my-courses", "/assignments", "/quizzes", "/achievements", "/profile").permitAll()
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .anyRequest().authenticated()

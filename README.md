@@ -27,8 +27,8 @@ A full-stack Learning Management System built with React, Spring Boot, and MySQL
 - React Router for navigation
 
 ### Deployment
-- Frontend: Vercel/Netlify
-- Backend: Render/Railway/AWS EC2
+- Frontend: Vercel
+- Backend: Railway
 - Database: MySQL (Cloud)
 
 ## 📁 Project Structure
@@ -67,9 +67,9 @@ lms-project/
 
 ## 🔐 Default Credentials
 
-- **Admin**: admin@lms.com / admin123
-- **Instructor**: instructor@lms.com / instructor123
-- **Student**: student@lms.com / student123
+- **Admin**: admin/ Admin@123
+- **Instructor**: instructor1/ Instructor@123
+- **Student**: student1 / Student@123
 
 ## 📚 API Documentation
 
@@ -101,7 +101,6 @@ The backend provides REST APIs for:
 4. Push to the branch
 5. Create a Pull Request
 
-## 📄 License
 
-This project is licensed under the MIT License.
+
 
