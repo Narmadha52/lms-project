@@ -23,7 +23,6 @@ healthcheckPath = "/health"
 healthcheckTimeout = 300
 
 # Optional: Replicas and region
-replicas = 1
 region = "asia-southeast1"
 
 # Resource limits (if needed)
