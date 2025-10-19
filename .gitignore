@@ -155,3 +155,4 @@ application-prod.properties
 
 "frontend/build/" 
 frontend/build/ 
+.env 
