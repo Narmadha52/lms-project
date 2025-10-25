@@ -1,0 +1,14 @@
+# Logs
+logs/
+*.log
+*.log.*
+*.gz
+*.zip
+
+# Environment files
+.env
+.env.local
+
+# Build directories
+target/
+build/
