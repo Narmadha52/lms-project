@@ -1,14 +1,14 @@
-// File: src/main/java/com/lms/config/WebSecurityConfig.java
-
 package com.lms.config;
 
 import com.lms.service.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value; // Used for dynamic config
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -18,6 +18,12 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 @EnableMethodSecurity(prePostEnabled = true)
@@ -31,6 +37,16 @@ public class WebSecurityConfig {
 
     @Autowired
     private JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    // -----------------------------------------------------------------
+    // CRITICAL FIX: Use the 'cors.allowed.origins' property name
+    // -----------------------------------------------------------------
+    @Value("${cors.allowed.origins}")
+    private String allowedOriginsConfig;
+
+    // We can also use @Value to inject other CORS properties if needed,
+    // but manually defining them here is simpler as they are static.
+    // -----------------------------------------------------------------
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -51,36 +67,52 @@ public class WebSecurityConfig {
     }
 
     @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+
+        // Dynamically set allowed origins based on property (e.g., "http://localhost:3000,https://prod-frontend.com")
+        // Note: We use trim() and filter to handle potential whitespace or empty strings.
+        List<String> allowedOrigins = Arrays.stream(allowedOriginsConfig.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .toList();
+
+        configuration.setAllowedOrigins(allowedOrigins);
+
+        configuration.setAllowCredentials(true);
+        // Using List.of() to match the methods defined in your properties: GET, POST, PUT, DELETE, OPTIONS
+        configuration.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS","PATCH"));
+
+        // Using wildcard for headers as defined in your properties: cors.allowed.headers=*
+        configuration.setAllowedHeaders(List.of("*"));
+
+        configuration.setExposedHeaders(List.of("Authorization"));
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
+
+    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                // **1. CORRECTED CORS CONFIGURATION**
-                .cors(cors -> cors.configurationSource(request -> {
-                    org.springframework.web.cors.CorsConfiguration config = new org.springframework.web.cors.CorsConfiguration();
-                    config.setAllowCredentials(true);
+                .cors(Customizer.withDefaults()) // Uses the CorsConfigurationSource bean defined above
 
-                    // ALLOWED ORIGINS: Localhost:3000 AND the Vercel deployed frontend URL
-                    config.setAllowedOrigins(java.util.List.of(
-                            "http://localhost:3000",
-                            "https://lms-project-seven-umber.vercel.app"
-                    ));
-
-                    config.setAllowedMethods(java.util.List.of("GET","POST","PUT","DELETE","OPTIONS","PATCH"));
-                    config.setAllowedHeaders(java.util.List.of("Authorization","Cache-Control","Content-Type"));
-                    config.setExposedHeaders(java.util.List.of("Authorization"));
-                    return config;
-                }))
-                // **2. STANDARD SPRING SECURITY CONFIGURATION**
                 .csrf(AbstractHttpConfigurer::disable)
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // IMPORTANT: Preflight requests must be allowed
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/signin", "/api/auth/signup").permitAll()
-                        // Note: The following paths are likely internal frontend routes, so they don't need to be permitAll on the backend:
-                        // .requestMatchers("/", "/dashboard", "/courses", "/my-courses", "/assignments", "/quizzes", "/achievements", "/profile").permitAll()
+
+                        // Frontend routing URLs
+                        .requestMatchers("/", "/dashboard", "/courses", "/my-courses", "/assignments", "/quizzes", "/achievements", "/profile").permitAll()
+
+                        // Static resources and documentation
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+
                         .anyRequest().authenticated()
                 );
 

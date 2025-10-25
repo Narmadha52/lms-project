@@ -41,21 +41,36 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String username = tokenProvider.getUsernameFromJWT(jwt);
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
+                // Create and set authentication token
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities());
+
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
+            } else if (StringUtils.hasText(jwt)) {
+                // Optional: Log that a token was present but invalid/expired.
+                // Note: The specific exception is usually caught inside tokenProvider.validateToken()
+                logger.debug("Token present but could not be validated or is expired.");
             }
         } catch (Exception ex) {
-            logger.error("Could not set user authentication in security context", ex);
+            // Logging the exception at the error level. This handles all exceptions (e.g., token parsing errors, user not found).
+            logger.error("Could not set user authentication in security context.", ex);
         }
 
+        // Continue the filter chain
         filterChain.doFilter(request, response);
     }
 
+    /**
+     * Extracts the JWT from the Authorization header.
+     * @param request The HTTP request.
+     * @return The JWT string, or null if not present or malformed.
+     */
     private String getJwtFromRequest(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
+
+        // Check if the header exists and starts with "Bearer "
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7);
         }
