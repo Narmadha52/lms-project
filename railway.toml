@@ -9,7 +9,7 @@ dockerfilePath = "backend/Dockerfile"
 buildContext = "backend"
 
 [deploy]
-# Command to start your app - REMOVE THIS LINE
+# The startCommand is handled by the Dockerfile's ENTRYPOINT, so we remove it here for cleanliness.
 # startCommand = "java -jar app.jar"
 
 [[services]]
