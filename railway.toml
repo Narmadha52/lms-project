@@ -9,8 +9,8 @@ dockerfilePath = "backend/Dockerfile"
 buildContext = "backend"
 
 [deploy]
-# Command to start your app
-startCommand = "java -jar app.jar"
+# Command to start your app - REMOVE THIS LINE
+# startCommand = "java -jar app.jar"
 
 [[services]]
 # Public HTTP port
