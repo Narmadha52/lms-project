@@ -104,7 +104,13 @@ public class WebSecurityConfig {
 
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/auth/signin", "/api/auth/signup").permitAll()
+                        .requestMatchers("/api/auth/signin", "/api/auth/signup","/api/auth/hello").permitAll()
+                        .requestMatchers(
+                                "/actuator/**",
+                                "/health",
+                                "/api/health"
+                        ).permitAll()
+
 
                         // Frontend routing URLs
                         .requestMatchers("/", "/dashboard", "/courses", "/my-courses", "/assignments", "/quizzes", "/achievements", "/profile").permitAll()
