@@ -4,7 +4,7 @@ nixPkgs = ["jdk21", "maven"]
 [phases.build]
 cmds = ["mvn clean package -DskipTests"]
 
-[start]
+[phases.start]
 cmd = "java -Dserver.port=$PORT -Dspring.profiles.active=prod -jar target/lms-backend-0.0.1-SNAPSHOT.jar"
 
 [variables]
