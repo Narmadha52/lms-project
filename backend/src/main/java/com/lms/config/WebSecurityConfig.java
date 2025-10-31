@@ -104,7 +104,7 @@ public class WebSecurityConfig {
 
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/auth/signin", "/api/auth/signup","/api/auth/hello").permitAll()
+                        .requestMatchers("/auth/signin", "/auth/signup","/auth/hello").permitAll()
                         .requestMatchers(
                                 "/actuator/**",
                                 "/health",
