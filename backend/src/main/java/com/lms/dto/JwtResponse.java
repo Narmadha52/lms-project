@@ -4,7 +4,7 @@ import com.lms.model.Role;
 
 public class JwtResponse {
     
-    private String token;
+    private String accessToken;
     private String type = "Bearer";
     private Long id;
     private String username;
@@ -18,7 +18,7 @@ public class JwtResponse {
     
     public JwtResponse(String accessToken, Long id, String username, String email, 
                       String firstName, String lastName, Role role, Boolean isApproved) {
-        this.token = accessToken;
+        this.accessToken = accessToken;
         this.id = id;
         this.username = username;
         this.email = email;
@@ -29,11 +29,11 @@ public class JwtResponse {
     }
     
     public String getAccessToken() {
-        return token;
+        return accessToken;
     }
     
     public void setAccessToken(String accessToken) {
-        this.token = accessToken;
+        this.accessToken = accessToken;
     }
     
     public String getTokenType() {
