@@ -23,11 +23,10 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/").permitAll()
                         .requestMatchers("/actuator/health/").permitAll()
                         .requestMatchers("/health").permitAll()
-                        .requestMatchers("/api/health").permitAll()
                         .requestMatchers("/").permitAll()
 
                         // Auth endpoints
-                        .requestMatchers("/api/auth/").permitAll()
+                        .requestMatchers("/auth/").permitAll()
 
                         // Error
                         .requestMatchers("/error").permitAll()
