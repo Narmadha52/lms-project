@@ -9,7 +9,7 @@ import java.util.HashMap;
 @RestController
 public class HealthController {
 
-    @GetMapping("/api/health")
+    @GetMapping("/health")
     public ResponseEntity<Map<String, Object>> apiHealth() {
         Map<String, Object> response = new HashMap<>();
         response.put("status", "UP");
