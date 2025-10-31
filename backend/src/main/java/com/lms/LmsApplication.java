@@ -41,7 +41,7 @@ public class LmsApplication {
                 admin.setEmail("admin@lms.com");
 
                 // IMPORTANT: Use the PasswordEncoder for security
-                admin.setPassword(passwordEncoder.encode("secureadminpassword")); // Use a secure default password
+                admin.setPassword(passwordEncoder.encode("admin123")); // Use a secure default password
 
                 // Assuming you have a Role enum or class
                 admin.setRole(Role.ADMIN);
