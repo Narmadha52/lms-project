@@ -4,7 +4,8 @@ export const coursesAPI = {
   // Public course endpoints
   getPublishedCourses: async () => {
     const response = await api.get('/courses/public');
-    return response.data.data;
+    console.log("Courses API response:", response);
+    return response.data.data || response.data;
   },
 
   searchCourses: async (query) => {
