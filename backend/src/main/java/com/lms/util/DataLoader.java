@@ -50,7 +50,7 @@ public class DataLoader {
 
                 User instructor = new User();
                 instructor.setUsername("instructor1");
-                instructor.setEmail("instructor1@lms.com");
+                instructor.setEmail("instructor@lms.com");
                 instructor.setFirstName("John");
                 instructor.setLastName("Doe");
                 instructor.setRole(Role.INSTRUCTOR);
@@ -59,6 +59,23 @@ public class DataLoader {
 
                 userRepository.save(instructor);
                 System.out.println("User 'instructor1' created successfully.");
+            }
+
+             if (userRepository.findByUsername("student1").isEmpty()) {
+
+                System.out.println("Seeding initial instructor user: 'student1'");
+
+                User student = new User();
+                student.setUsername("student1");
+                student.setEmail("student@lms.com");
+                student.setFirstName("Student");
+                student.setLastName("s");
+                student.setRole(Role.STUDENT);
+                student.setIsApproved(true);
+                student.setPassword(passwordEncoder.encode("student123"));
+
+                userRepository.save(student);
+                System.out.println("User 'student123' created successfully.");
             }
         };
     }
