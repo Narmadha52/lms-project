@@ -37,7 +37,7 @@ public class DataLoader {
                 admin.setRole(Role.ADMIN);
                 admin.setIsApproved(true);
 
-                admin.setPassword(passwordEncoder.encode("securePassword123"));
+                admin.setPassword(passwordEncoder.encode("admin123"));
 
                 userRepository.save(admin);
                 System.out.println("User 'admin' created successfully.");
@@ -55,7 +55,7 @@ public class DataLoader {
                 instructor.setLastName("Doe");
                 instructor.setRole(Role.INSTRUCTOR);
                 instructor.setIsApproved(true);
-                instructor.setPassword(passwordEncoder.encode("instructorPass"));
+                instructor.setPassword(passwordEncoder.encode("instructor123"));
 
                 userRepository.save(instructor);
                 System.out.println("User 'instructor1' created successfully.");
