@@ -16,7 +16,6 @@ import static org.mockito.Mockito.*;
 @DisplayName("EnrollmentService Unit Tests")
 class EnrollmentServiceTest {
 
-```
 @Mock private EnrollmentRepository enrollmentRepository;
 @Mock private CourseRepository courseRepository;
 @Mock private LessonRepository lessonRepository;
