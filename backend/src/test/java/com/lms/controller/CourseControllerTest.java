@@ -206,7 +206,7 @@ class CourseControllerTest {
             // Assert
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertTrue(response.getBody().isSuccess());
-            assertEquals("Courses retrieved by category successfully", response.getBody().getMessage());
+             assertEquals("Courses retrieved successfully", response.getBody().getMessage());
             assertEquals(2, response.getBody().getData().size());
             
             verify(courseService, times(1)).getCoursesByCategory(category);
