@@ -51,7 +51,7 @@ class AuthControllerTest {
 
         // JWT Response
         jwtResponse = new JwtResponse();
-        jwtResponse.setToken("mock-jwt-token");
+        jwtResponse.setAccessToken("mock-jwt-token");
         jwtResponse.setType("Bearer");
 
         // User
@@ -86,7 +86,7 @@ class AuthControllerTest {
         assertTrue(response.getBody().isSuccess());
         assertEquals("User signed in successfully", response.getBody().getMessage());
         assertEquals(jwtResponse, response.getBody().getData());
-        assertEquals("mock-jwt-token", response.getBody().getData().getToken());
+        assertEquals("mock-jwt-token", response.getBody().getData().getAccessToken());
         
         verify(authService, times(1)).authenticateUser(loginRequest);
     }
