@@ -105,8 +105,8 @@ class LessonProgressServiceTest {
         LessonProgress result = lessonProgressService.markLessonAsCompleted(course.getId(), lesson1.getId());
 
         // Assert
-        assertNotNull(result);
-        assertTrue(result.getCompleted());
+        assertNotNull(result.getCompleted(), "Completed field should not be null");
+        assertTrue(result.getCompleted(), "Lesson should be marked as completed");
 
         verify(lessonProgressRepository, atLeastOnce()).save(any(LessonProgress.class));
         verify(enrollmentRepository, times(1)).save(enrollment);
@@ -173,8 +173,8 @@ class LessonProgressServiceTest {
         LessonProgress result = lessonProgressService.markLessonAsCompleted(course.getId(), lesson1.getId());
 
         // Assert
-        assertNotNull(result);
-        assertTrue(result.getCompleted());
+        assertNotNull(result.getCompleted(), "Completed field should not be null");
+        assertTrue(result.getCompleted(), "Lesson should be marked as completed");
         verify(lessonProgressRepository, atLeastOnce()).save(any(LessonProgress.class));
     }
 
