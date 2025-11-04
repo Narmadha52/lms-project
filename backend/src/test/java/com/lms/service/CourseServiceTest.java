@@ -517,7 +517,7 @@ class CourseServiceTest {
                 .thenReturn(Arrays.asList(publishedCourse));
 
         // Act
-        List<CourseDto> result = courseService.getCoursesByDifficultyLevel(DifficultyLevel.BEGINNER);
+        List<CourseDto> result = courseService.getCoursesByDifficulty(DifficultyLevel.BEGINNER);
 
         // Assert
         assertNotNull(result);
