@@ -193,4 +193,9 @@ public class User extends Auditable {
     public boolean isStudent() {
         return role == Role.STUDENT;
     }
+
+    public void setCreatedAt(LocalDateTime now) {
+		// TODO Auto-generated method stub
+		
+	}
 }
