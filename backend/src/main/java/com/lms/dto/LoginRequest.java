@@ -34,5 +34,10 @@ public class LoginRequest {
     public void setPassword(String password) {
         this.password = password;
     }
+
+    public void setUsername(String string) {
+		// TODO Auto-generated method stub
+		
+	}
 }
 
