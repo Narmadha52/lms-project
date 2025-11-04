@@ -174,5 +174,20 @@ public class CourseDto {
     public boolean isFree() {
         return price == null || price.compareTo(BigDecimal.ZERO) == 0;
     }
+
+    public void setPublished(boolean published) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void setDifficulty(DifficultyLevel beginner) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void setDuration(int i) {
+		// TODO Auto-generated method stub
+		
+	}
 }
 
