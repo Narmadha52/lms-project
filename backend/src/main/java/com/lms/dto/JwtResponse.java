@@ -99,5 +99,21 @@ public class JwtResponse {
     public void setIsApproved(Boolean isApproved) {
         this.isApproved = isApproved;
     }
+
+    public void setToken(String string) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void setType(String string) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public Object getToken() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+}
 }
 
