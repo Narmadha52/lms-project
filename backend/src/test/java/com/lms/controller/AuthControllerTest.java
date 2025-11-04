@@ -1,28 +1,23 @@
 package com.lms.controller;
 
 import com.lms.dto.*;
-import com.lms.model.Role;
 import com.lms.model.User;
 import com.lms.service.AuthService;
 import com.lms.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.junit.jupiter.api.DisplayName;
+import org.mockito.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
-/**
- * Unit tests for AuthController class.
- * This test class verifies the behavior of all endpoints inside AuthController.
- * It uses Mockito for mocking service dependencies and JUnit 5 for assertions.
- */
 class AuthControllerTest {
+
+    @InjectMocks
+    private AuthController authController;
 
     @Mock
     private AuthService authService;
@@ -30,158 +25,272 @@ class AuthControllerTest {
     @Mock
     private UserService userService;
 
-    @InjectMocks
-    private AuthController authController;
-
-    // DTOs and mock objects used across multiple tests
     private LoginRequest loginRequest;
     private SignupRequest signupRequest;
     private JwtResponse jwtResponse;
-    private User mockUser;
+    private User user;
     private UserDto userDto;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        setupTestData();
+    }
 
-        // Creating mock login request
-        loginRequest = new LoginRequest("john_doe", "securepassword");
+    private void setupTestData() {
+        // Login Request
+        loginRequest = new LoginRequest();
+        loginRequest.setUsername("testuser");
+        loginRequest.setPassword("password123");
 
-        // Creating mock signup request
+        // Signup Request
         signupRequest = new SignupRequest();
-        signupRequest.setUsername("john_doe");
-        signupRequest.setEmail("john@example.com");
-        signupRequest.setPassword("securepassword");
-        signupRequest.setFirstName("John");
-        signupRequest.setLastName("Doe");
-        signupRequest.setRole(Role.STUDENT);
+        signupRequest.setUsername("newuser");
+        signupRequest.setEmail("newuser@test.com");
+        signupRequest.setPassword("password123");
 
-        // Simulate a JWT response from AuthService
-        jwtResponse = new JwtResponse(
-                "mock-jwt-token",
-                1L,
-                "john_doe",
-                "john@example.com",
-                "John",
-                "Doe",
-                Role.STUDENT,
-                true
-        );
+        // JWT Response
+        jwtResponse = new JwtResponse();
+        jwtResponse.setToken("mock-jwt-token");
+        jwtResponse.setType("Bearer");
 
-        // Create a mock User entity for testing
-        mockUser = new User();
-        mockUser.setId(1L);
-        mockUser.setUsername("john_doe");
-        mockUser.setEmail("john@example.com");
-        mockUser.setFirstName("John");
-        mockUser.setLastName("Doe");
-        mockUser.setRole(Role.STUDENT);
-        mockUser.setIsApproved(true);
+        // User
+        user = new User();
+        user.setId(1L);
+        user.setUsername("testuser");
+        user.setEmail("test@test.com");
 
-        // Create corresponding DTO
-        userDto = new UserDto(
-                1L,
-                "john_doe",
-                "john@example.com",
-                "John",
-                "Doe",
-                Role.STUDENT,
-                true,
-                null,
-                null
-        );
+        // UserDto
+        userDto = new UserDto();
+        userDto.setId(1L);
+        userDto.setUsername("testuser");
+        userDto.setEmail("test@test.com");
     }
 
-    // ------------------------------------------------------------------------------------
-    // TEST CASES FOR /auth/signin
-    // ------------------------------------------------------------------------------------
+    // ========== authenticateUser Tests ==========
 
     @Test
-    @DisplayName("Test successful user authentication")
+    @DisplayName("Should authenticate user successfully")
     void testAuthenticateUser_Success() {
-        when(authService.authenticateUser(any(LoginRequest.class))).thenReturn(jwtResponse);
+        // Arrange
+        when(authService.authenticateUser(loginRequest)).thenReturn(jwtResponse);
 
-        ResponseEntity<ApiResponse<JwtResponse>> response = authController.authenticateUser(loginRequest);
+        // Act
+        ResponseEntity<ApiResponse<JwtResponse>> response = 
+                authController.authenticateUser(loginRequest);
 
-        assertEquals(200, response.getStatusCodeValue());
+        // Assert
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
         assertTrue(response.getBody().isSuccess());
-        assertEquals("john_doe", response.getBody().getData().getUsername());
-        assertEquals("mock-jwt-token", response.getBody().getData().getAccessToken());
         assertEquals("User signed in successfully", response.getBody().getMessage());
+        assertEquals(jwtResponse, response.getBody().getData());
+        assertEquals("mock-jwt-token", response.getBody().getData().getToken());
+        
+        verify(authService, times(1)).authenticateUser(loginRequest);
     }
 
     @Test
-    @DisplayName("Test failed user authentication due to invalid credentials")
-    void testAuthenticateUser_Failure() {
-        when(authService.authenticateUser(any(LoginRequest.class)))
+    @DisplayName("Should return error for invalid credentials")
+    void testAuthenticateUser_InvalidCredentials() {
+        // Arrange
+        when(authService.authenticateUser(loginRequest))
                 .thenThrow(new RuntimeException("Invalid username or password"));
 
-        ResponseEntity<ApiResponse<JwtResponse>> response = authController.authenticateUser(loginRequest);
+        // Act
+        ResponseEntity<ApiResponse<JwtResponse>> response = 
+                authController.authenticateUser(loginRequest);
 
-        assertEquals(400, response.getStatusCodeValue());
+        // Assert
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNotNull(response.getBody());
         assertFalse(response.getBody().isSuccess());
         assertTrue(response.getBody().getMessage().contains("Invalid username or password"));
         assertNull(response.getBody().getData());
+        
+        verify(authService, times(1)).authenticateUser(loginRequest);
     }
 
-    // ------------------------------------------------------------------------------------
-    // TEST CASES FOR /auth/signup
-    // ------------------------------------------------------------------------------------
+    @Test
+    @DisplayName("Should handle authentication service exception")
+    void testAuthenticateUser_ServiceException() {
+        // Arrange
+        when(authService.authenticateUser(loginRequest))
+                .thenThrow(new RuntimeException("Authentication service unavailable"));
+
+        // Act
+        ResponseEntity<ApiResponse<JwtResponse>> response = 
+                authController.authenticateUser(loginRequest);
+
+        // Assert
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertFalse(response.getBody().isSuccess());
+        assertTrue(response.getBody().getMessage().contains("Authentication service unavailable"));
+        
+        verify(authService, times(1)).authenticateUser(loginRequest);
+    }
+
+    // ========== registerUser Tests ==========
 
     @Test
-    @DisplayName("Test successful user registration")
+    @DisplayName("Should register user successfully")
     void testRegisterUser_Success() {
-        when(authService.registerUser(any(SignupRequest.class))).thenReturn(mockUser);
-        when(userService.convertToDto(mockUser)).thenReturn(userDto);
+        // Arrange
+        when(authService.registerUser(signupRequest)).thenReturn(user);
+        when(userService.convertToDto(user)).thenReturn(userDto);
 
-        ResponseEntity<ApiResponse<UserDto>> response = authController.registerUser(signupRequest);
+        // Act
+        ResponseEntity<ApiResponse<UserDto>> response = 
+                authController.registerUser(signupRequest);
 
-        assertEquals(200, response.getStatusCodeValue());
+        // Assert
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
         assertTrue(response.getBody().isSuccess());
-        assertEquals("john_doe", response.getBody().getData().getUsername());
         assertEquals("User registered successfully", response.getBody().getMessage());
+        assertEquals(userDto, response.getBody().getData());
+        assertEquals("testuser", response.getBody().getData().getUsername());
+        
+        verify(authService, times(1)).registerUser(signupRequest);
+        verify(userService, times(1)).convertToDto(user);
     }
 
     @Test
-    @DisplayName("Test user registration failure due to duplicate email")
-    void testRegisterUser_Failure() {
-        when(authService.registerUser(any(SignupRequest.class)))
-                .thenThrow(new RuntimeException("Email already exists"));
+    @DisplayName("Should return error when username already exists")
+    void testRegisterUser_UsernameExists() {
+        // Arrange
+        when(authService.registerUser(signupRequest))
+                .thenThrow(new RuntimeException("Username is already taken"));
 
-        ResponseEntity<ApiResponse<UserDto>> response = authController.registerUser(signupRequest);
+        // Act
+        ResponseEntity<ApiResponse<UserDto>> response = 
+                authController.registerUser(signupRequest);
 
-        assertEquals(400, response.getStatusCodeValue());
+        // Assert
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertFalse(response.getBody().isSuccess());
-        assertTrue(response.getBody().getMessage().contains("Email already exists"));
+        assertTrue(response.getBody().getMessage().contains("Username is already taken"));
+        assertNull(response.getBody().getData());
+        
+        verify(authService, times(1)).registerUser(signupRequest);
+        verify(userService, never()).convertToDto(any());
     }
 
-    // ------------------------------------------------------------------------------------
-    // TEST CASES FOR /auth/me
-    // ------------------------------------------------------------------------------------
+    @Test
+    @DisplayName("Should return error when email already exists")
+    void testRegisterUser_EmailExists() {
+        // Arrange
+        when(authService.registerUser(signupRequest))
+                .thenThrow(new RuntimeException("Email is already in use"));
+
+        // Act
+        ResponseEntity<ApiResponse<UserDto>> response = 
+                authController.registerUser(signupRequest);
+
+        // Assert
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertFalse(response.getBody().isSuccess());
+        assertTrue(response.getBody().getMessage().contains("Email is already in use"));
+        
+        verify(authService, times(1)).registerUser(signupRequest);
+    }
 
     @Test
-    @DisplayName("Test get current user details success")
+    @DisplayName("Should handle registration validation errors")
+    void testRegisterUser_ValidationError() {
+        // Arrange
+        when(authService.registerUser(signupRequest))
+                .thenThrow(new RuntimeException("Password must be at least 8 characters"));
+
+        // Act
+        ResponseEntity<ApiResponse<UserDto>> response = 
+                authController.registerUser(signupRequest);
+
+        // Assert
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertFalse(response.getBody().isSuccess());
+        assertTrue(response.getBody().getMessage().contains("Password must be at least 8 characters"));
+        
+        verify(authService, times(1)).registerUser(signupRequest);
+    }
+
+    // ========== getCurrentUser Tests ==========
+
+    @Test
+    @DisplayName("Should retrieve current user successfully")
     void testGetCurrentUser_Success() {
-        when(authService.getCurrentUser()).thenReturn(mockUser);
-        when(userService.convertToDto(mockUser)).thenReturn(userDto);
+        // Arrange
+        when(authService.getCurrentUser()).thenReturn(user);
+        when(userService.convertToDto(user)).thenReturn(userDto);
 
+        // Act
         ResponseEntity<ApiResponse<UserDto>> response = authController.getCurrentUser();
 
-        assertEquals(200, response.getStatusCodeValue());
+        // Assert
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
         assertTrue(response.getBody().isSuccess());
-        assertEquals("john_doe", response.getBody().getData().getUsername());
         assertEquals("User retrieved successfully", response.getBody().getMessage());
+        assertEquals(userDto, response.getBody().getData());
+        assertNotNull(response.getBody().getData().getId());
+        
+        verify(authService, times(1)).getCurrentUser();
+        verify(userService, times(1)).convertToDto(user);
     }
 
     @Test
-    @DisplayName("Test get current user failure when no user found")
-    void testGetCurrentUser_Failure() {
-        when(authService.getCurrentUser()).thenThrow(new RuntimeException("User not found"));
+    @DisplayName("Should return error when user not authenticated")
+    void testGetCurrentUser_NotAuthenticated() {
+        // Arrange
+        when(authService.getCurrentUser())
+                .thenThrow(new RuntimeException("User not authenticated"));
 
+        // Act
         ResponseEntity<ApiResponse<UserDto>> response = authController.getCurrentUser();
 
-        assertEquals(400, response.getStatusCodeValue());
+        // Assert
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertFalse(response.getBody().isSuccess());
-        assertTrue(response.getBody().getMessage().contains("User not found"));
+        assertTrue(response.getBody().getMessage().contains("User not authenticated"));
+        assertNull(response.getBody().getData());
+        
+        verify(authService, times(1)).getCurrentUser();
+        verify(userService, never()).convertToDto(any());
+    }
+
+    @Test
+    @DisplayName("Should handle session expired error")
+    void testGetCurrentUser_SessionExpired() {
+        // Arrange
+        when(authService.getCurrentUser())
+                .thenThrow(new RuntimeException("Session expired"));
+
+        // Act
+        ResponseEntity<ApiResponse<UserDto>> response = authController.getCurrentUser();
+
+        // Assert
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertFalse(response.getBody().isSuccess());
+        assertTrue(response.getBody().getMessage().contains("Session expired"));
+        
+        verify(authService, times(1)).getCurrentUser();
+    }
+
+    @Test
+    @DisplayName("Should handle user not found error")
+    void testGetCurrentUser_UserNotFound() {
+        // Arrange
+        when(authService.getCurrentUser())
+                .thenThrow(new RuntimeException("User not found"));
+
+        // Act
+        ResponseEntity<ApiResponse<UserDto>> response = authController.getCurrentUser();
+
+        // Assert
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertFalse(response.getBody().isSuccess());
+        
+        verify(authService, times(1)).getCurrentUser();
     }
 }
