@@ -102,28 +102,33 @@ public class WebSecurityConfig {
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-                .authorizeHttpRequests(authz -> authz
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/auth/signin", "/auth/signup","/auth/hello").permitAll()
-                        .requestMatchers(
-                                "/actuator/**",
-                                "/health",
-                                "/api/health"
-                        ).permitAll()
+        //         .authorizeHttpRequests(authz -> authz
+        //                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+        //                 .requestMatchers("/auth/signin", "/auth/signup","/auth/hello").permitAll()
+        //                 .requestMatchers(
+        //                         "/actuator/**",
+        //                         "/health",
+        //                         "/api/health"
+        //                 ).permitAll()
 
 
-                        // Frontend routing URLs
-                        .requestMatchers("/", "/dashboard", "/courses", "/my-courses", "/assignments", "/quizzes", "/achievements", "/profile").permitAll()
+        //                 // Frontend routing URLs
+        //                 .requestMatchers("/", "/dashboard", "/courses", "/my-courses", "/assignments", "/quizzes", "/achievements", "/profile").permitAll()
 
-                        // Static resources and documentation
-                        .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
-                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+        //                 // Static resources and documentation
+        //                 .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
+        //                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
 
-                        .anyRequest().authenticated()
-                );
+        //                 .anyRequest().authenticated()
+        //         );
 
-        http.authenticationProvider(authenticationProvider());
-        http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        // http.authenticationProvider(authenticationProvider());
+        // http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
+            .authorizeHttpRequests(authz -> authz
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                .anyRequest().permitAll() 
+            );
 
         return http.build();
     }
