@@ -225,7 +225,13 @@ class AuthServiceTest {
     @DisplayName("Should successfully authenticate user with valid credentials")
     void authenticateUser_WhenValidCredentials_ShouldReturnJwtResponse() {
         // Arrange
+        UserDetailsServiceImpl.UserPrincipal mockPrincipal = mock(UserDetailsServiceImpl.UserPrincipal.class);
+        when(mockPrincipal.getId()).thenReturn(1L);
+        when(mockPrincipal.getUsername()).thenReturn("john_doe");
+
         Authentication mockAuth = mock(Authentication.class);
+        when(mockAuth.getPrincipal()).thenReturn(mockPrincipal);
+
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
             .thenReturn(mockAuth);
         when(tokenProvider.generateToken(mockAuth)).thenReturn("jwt-token-12345");
@@ -234,12 +240,13 @@ class AuthServiceTest {
         JwtResponse response = authService.authenticateUser(validLoginRequest);
 
         // Assert
-        assertNotNull(response, "JWT response should not be null");
+        assertNotNull(response);
         assertEquals("jwt-token-12345", response.getToken());
 
         verify(authenticationManager, times(1)).authenticate(any(UsernamePasswordAuthenticationToken.class));
         verify(tokenProvider, times(1)).generateToken(mockAuth);
     }
+
 
     @Test
     @DisplayName("Should handle invalid credentials error")
@@ -268,7 +275,14 @@ class AuthServiceTest {
         emailLoginRequest.setUsernameOrEmail("john@example.com");
         emailLoginRequest.setPassword("password123");
 
+        // Mock principal returned after authentication
+        UserDetailsServiceImpl.UserPrincipal mockPrincipal = mock(UserDetailsServiceImpl.UserPrincipal.class);
+        when(mockPrincipal.getId()).thenReturn(1L);
+        when(mockPrincipal.getUsername()).thenReturn("john@example.com");
+
+        // Mock authentication object and dependencies
         Authentication mockAuth = mock(Authentication.class);
+        when(mockAuth.getPrincipal()).thenReturn(mockPrincipal);
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
             .thenReturn(mockAuth);
         when(tokenProvider.generateToken(mockAuth)).thenReturn("jwt-token-email");
@@ -281,6 +295,7 @@ class AuthServiceTest {
         assertEquals("jwt-token-email", response.getToken());
         verify(authenticationManager, times(1)).authenticate(any(UsernamePasswordAuthenticationToken.class));
     }
+
 
     @Test
     @DisplayName("Should handle null login request")
