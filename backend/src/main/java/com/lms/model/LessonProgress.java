@@ -141,5 +141,27 @@ public class LessonProgress {
             return String.format("%dm", minutes);
         }
     }
+
+
+       public void setCompleted(boolean b) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void setTimeSpent(int i) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public BooleanSupplier getCompleted() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public Integer getTimeSpent() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+       
 }
 
