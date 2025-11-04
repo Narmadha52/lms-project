@@ -124,7 +124,7 @@ class CourseControllerTest {
             // Assert
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertTrue(response.getBody().isSuccess());
-            assertEquals("Courses searched successfully", response.getBody().getMessage());
+            assertEquals("Search results retrieved successfully", response.getBody().getMessage());
             assertEquals(2, response.getBody().getData().size());
             
             verify(courseService, times(1)).searchCourses(query);
