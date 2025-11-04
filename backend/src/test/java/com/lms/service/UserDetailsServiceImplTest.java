@@ -5,6 +5,7 @@ import com.lms.model.User;
 import com.lms.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 import org.mockito.*;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -14,6 +15,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+@DisplayName("UserDetailsServiceImpl Tests")
 class UserDetailsServiceImplTest {
 
     @Mock
@@ -22,93 +24,259 @@ class UserDetailsServiceImplTest {
     @InjectMocks
     private UserDetailsServiceImpl userDetailsService;
 
-    private User user;
+    private User approvedUser;
+    private User unapprovedUser;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-
-        user = new User();
-        user.setId(1L);
-        user.setUsername("narmadha");
-        user.setEmail("narmadha@example.com");
-        user.setPassword("securePass");
-        user.setFirstName("Narmadha");
-        user.setLastName("G");
-        user.setRole(Role.ADMIN);
-        user.setIsApproved(true);
+        setupTestData();
     }
 
-    // ✅ Should load user by username successfully
-    @Test
-    void testLoadUserByUsername_Success_UsingUsername() {
-        when(userRepository.findByUsernameOrEmail("narmadha", "narmadha"))
-                .thenReturn(Optional.of(user));
+    private void setupTestData() {
+        approvedUser = new User();
+        approvedUser.setId(1L);
+        approvedUser.setUsername("narmadha");
+        approvedUser.setEmail("narmadha@example.com");
+        approvedUser.setPassword("securePassword");
+        approvedUser.setFirstName("Narmadha");
+        approvedUser.setLastName("G");
+        approvedUser.setRole(Role.ADMIN);
+        approvedUser.setIsApproved(true);
 
+        unapprovedUser = new User();
+        unapprovedUser.setId(2L);
+        unapprovedUser.setUsername("pending_instructor");
+        unapprovedUser.setEmail("pending@example.com");
+        unapprovedUser.setPassword("password");
+        unapprovedUser.setFirstName("Pending");
+        unapprovedUser.setLastName("Instructor");
+        unapprovedUser.setRole(Role.INSTRUCTOR);
+        unapprovedUser.setIsApproved(false);
+    }
+
+    // ==================== LOAD USER BY USERNAME TESTS ====================
+
+    @Test
+    @DisplayName("Should successfully load user by username")
+    void loadUserByUsername_WhenValidUsername_ShouldReturnUserDetails() {
+        // Arrange
+        when(userRepository.findByUsernameOrEmail("narmadha", "narmadha"))
+                .thenReturn(Optional.of(approvedUser));
+
+        // Act
         UserDetails result = userDetailsService.loadUserByUsername("narmadha");
 
-        assertNotNull(result);
+        // Assert
+        assertNotNull(result, "UserDetails should not be null");
         assertEquals("narmadha", result.getUsername());
-        assertEquals("securePass", result.getPassword());
-        assertTrue(result.isEnabled());
+        assertEquals("securePassword", result.getPassword());
+        assertTrue(result.isEnabled(), "User should be enabled");
         assertTrue(result.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN")));
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN")),
+                "User should have ADMIN authority");
 
-        verify(userRepository, times(1))
-                .findByUsernameOrEmail("narmadha", "narmadha");
+        verify(userRepository, times(1)).findByUsernameOrEmail("narmadha", "narmadha");
     }
 
-    // ✅ Should load user by email successfully
     @Test
-    void testLoadUserByUsername_Success_UsingEmail() {
+    @DisplayName("Should successfully load user by email")
+    void loadUserByUsername_WhenValidEmail_ShouldReturnUserDetails() {
+        // Arrange
         when(userRepository.findByUsernameOrEmail("narmadha@example.com", "narmadha@example.com"))
-                .thenReturn(Optional.of(user));
+                .thenReturn(Optional.of(approvedUser));
 
+        // Act
         UserDetails result = userDetailsService.loadUserByUsername("narmadha@example.com");
 
+        // Assert
         assertNotNull(result);
         assertEquals("narmadha", result.getUsername());
         assertTrue(result.isEnabled());
+        assertEquals("securePassword", result.getPassword());
+
+        verify(userRepository, times(1))
+                .findByUsernameOrEmail("narmadha@example.com", "narmadha@example.com");
     }
 
-    // ❌ Should throw exception when user not found
     @Test
-    void testLoadUserByUsername_UserNotFound() {
+    @DisplayName("Should handle user not found error")
+    void loadUserByUsername_WhenUserNotFound_ShouldHandleError() {
+        // Arrange
         when(userRepository.findByUsernameOrEmail("unknown", "unknown"))
                 .thenReturn(Optional.empty());
 
-        UsernameNotFoundException ex = assertThrows(
-                UsernameNotFoundException.class,
-                () -> userDetailsService.loadUserByUsername("unknown")
-        );
+        // Act & Assert
+        try {
+            userDetailsService.loadUserByUsername("unknown");
+            fail("Expected UsernameNotFoundException to be thrown");
+        } catch (UsernameNotFoundException ex) {
+            assertEquals("User not found with username or email: unknown", ex.getMessage());
+        }
 
-        assertEquals("User not found with username or email: unknown", ex.getMessage());
-        verify(userRepository).findByUsernameOrEmail("unknown", "unknown");
+        verify(userRepository, times(1)).findByUsernameOrEmail("unknown", "unknown");
     }
 
-    // ✅ UserPrincipal properties test
     @Test
-    void testUserPrincipalProperties() {
-        UserDetailsServiceImpl.UserPrincipal principal =
-                UserDetailsServiceImpl.UserPrincipal.create(user);
+    @DisplayName("Should load unapproved user and mark as disabled")
+    void loadUserByUsername_WhenUserNotApproved_ShouldReturnDisabledUserDetails() {
+        // Arrange
+        when(userRepository.findByUsernameOrEmail("pending_instructor", "pending_instructor"))
+                .thenReturn(Optional.of(unapprovedUser));
 
-        assertEquals(user.getId(), principal.getId());
-        assertEquals(user.getUsername(), principal.getUsername());
-        assertEquals(user.getEmail(), principal.getEmail());
-        assertEquals(user.getPassword(), principal.getPassword());
-        assertEquals(user.getRole(), principal.getRole());
-        assertTrue(principal.isEnabled());
+        // Act
+        UserDetails result = userDetailsService.loadUserByUsername("pending_instructor");
+
+        // Assert
+        assertNotNull(result);
+        assertEquals("pending_instructor", result.getUsername());
+        assertFalse(result.isEnabled(), "Unapproved user should be disabled");
+        assertTrue(result.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_INSTRUCTOR")));
+
+        verify(userRepository, times(1))
+                .findByUsernameOrEmail("pending_instructor", "pending_instructor");
+    }
+
+    @Test
+    @DisplayName("Should handle empty username")
+    void loadUserByUsername_WhenEmptyUsername_ShouldHandleError() {
+        // Arrange
+        when(userRepository.findByUsernameOrEmail("", ""))
+                .thenReturn(Optional.empty());
+
+        // Act & Assert
+        try {
+            userDetailsService.loadUserByUsername("");
+            fail("Expected UsernameNotFoundException to be thrown");
+        } catch (UsernameNotFoundException ex) {
+            assertTrue(ex.getMessage().contains("User not found"));
+        }
+
+        verify(userRepository, times(1)).findByUsernameOrEmail("", "");
+    }
+
+    @Test
+    @DisplayName("Should handle null username")
+    void loadUserByUsername_WhenNullUsername_ShouldHandleError() {
+        // Act & Assert
+        try {
+            userDetailsService.loadUserByUsername(null);
+            fail("Expected exception to be thrown for null username");
+        } catch (Exception ex) {
+            assertNotNull(ex);
+        }
+    }
+
+    // ==================== USER PRINCIPAL TESTS ====================
+
+    @Test
+    @DisplayName("Should create UserPrincipal with correct properties for approved user")
+    void userPrincipal_WhenApprovedUser_ShouldHaveCorrectProperties() {
+        // Act
+        UserDetailsServiceImpl.UserPrincipal principal =
+                UserDetailsServiceImpl.UserPrincipal.create(approvedUser);
+
+        // Assert
+        assertNotNull(principal);
+        assertEquals(approvedUser.getId(), principal.getId());
+        assertEquals(approvedUser.getUsername(), principal.getUsername());
+        assertEquals(approvedUser.getEmail(), principal.getEmail());
+        assertEquals(approvedUser.getPassword(), principal.getPassword());
+        assertEquals(approvedUser.getRole(), principal.getRole());
+        assertTrue(principal.isEnabled(), "Approved user should be enabled");
+        assertNotNull(principal.getAuthorities());
+        assertEquals(1, principal.getAuthorities().size());
         assertTrue(principal.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN")));
     }
 
-    // ✅ Should handle disabled (unapproved) user
     @Test
-    void testUserPrincipalDisabledUser() {
-        user.setIsApproved(false);
+    @DisplayName("Should create UserPrincipal with disabled status for unapproved user")
+    void userPrincipal_WhenUnapprovedUser_ShouldBeDisabled() {
+        // Act
         UserDetailsServiceImpl.UserPrincipal principal =
-                UserDetailsServiceImpl.UserPrincipal.create(user);
+                UserDetailsServiceImpl.UserPrincipal.create(unapprovedUser);
 
-        assertFalse(principal.isEnabled());
+        // Assert
+        assertNotNull(principal);
+        assertEquals(unapprovedUser.getId(), principal.getId());
+        assertEquals("pending_instructor", principal.getUsername());
+        assertFalse(principal.isEnabled(), "Unapproved user should be disabled");
+        assertEquals(Role.INSTRUCTOR, principal.getRole());
+    }
+
+    @Test
+    @DisplayName("Should verify UserPrincipal account properties")
+    void userPrincipal_ShouldHaveCorrectAccountProperties() {
+        // Act
+        UserDetailsServiceImpl.UserPrincipal principal =
+                UserDetailsServiceImpl.UserPrincipal.create(approvedUser);
+
+        // Assert
+        assertTrue(principal.isAccountNonExpired(), "Account should not be expired");
+        assertTrue(principal.isAccountNonLocked(), "Account should not be locked");
+        assertTrue(principal.isCredentialsNonExpired(), "Credentials should not be expired");
+    }
+
+    @Test
+    @DisplayName("Should create UserPrincipal for STUDENT role")
+    void userPrincipal_WhenStudentRole_ShouldHaveStudentAuthority() {
+        // Arrange
+        User student = new User();
+        student.setId(3L);
+        student.setUsername("student");
+        student.setEmail("student@example.com");
+        student.setPassword("password");
+        student.setRole(Role.STUDENT);
+        student.setIsApproved(true);
+
+        // Act
+        UserDetailsServiceImpl.UserPrincipal principal =
+                UserDetailsServiceImpl.UserPrincipal.create(student);
+
+        // Assert
+        assertNotNull(principal);
+        assertTrue(principal.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_STUDENT")));
+        assertTrue(principal.isEnabled());
+    }
+
+    @Test
+    @DisplayName("Should create UserPrincipal for INSTRUCTOR role")
+    void userPrincipal_WhenInstructorRole_ShouldHaveInstructorAuthority() {
+        // Arrange
+        User instructor = new User();
+        instructor.setId(4L);
+        instructor.setUsername("instructor");
+        instructor.setEmail("instructor@example.com");
+        instructor.setPassword("password");
+        instructor.setRole(Role.INSTRUCTOR);
+        instructor.setIsApproved(true);
+
+        // Act
+        UserDetailsServiceImpl.UserPrincipal principal =
+                UserDetailsServiceImpl.UserPrincipal.create(instructor);
+
+        // Assert
+        assertNotNull(principal);
+        assertTrue(principal.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_INSTRUCTOR")));
+        assertTrue(principal.isEnabled());
+    }
+
+    @Test
+    @DisplayName("Should handle UserPrincipal equality")
+    void userPrincipal_WhenComparingInstances_ShouldHandleEquality() {
+        // Act
+        UserDetailsServiceImpl.UserPrincipal principal1 =
+                UserDetailsServiceImpl.UserPrincipal.create(approvedUser);
+        UserDetailsServiceImpl.UserPrincipal principal2 =
+                UserDetailsServiceImpl.UserPrincipal.create(approvedUser);
+
+        // Assert
+        assertEquals(principal1.getId(), principal2.getId());
+        assertEquals(principal1.getUsername(), principal2.getUsername());
+        assertEquals(principal1.getEmail(), principal2.getEmail());
     }
 }
