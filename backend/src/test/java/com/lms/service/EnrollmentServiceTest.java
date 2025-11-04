@@ -4,6 +4,7 @@ import com.lms.dto.EnrollmentDto;
 import com.lms.model.*;
 import com.lms.repository.*;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
 
@@ -12,82 +13,166 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+@DisplayName("EnrollmentService Unit Tests")
 class EnrollmentServiceTest {
 
-    @Mock private EnrollmentRepository enrollmentRepository;
-    @Mock private CourseRepository courseRepository;
-    @Mock private LessonRepository lessonRepository;
-    @Mock private LessonProgressRepository lessonProgressRepository;
-    @Mock private AuthService authService;
+```
+@Mock private EnrollmentRepository enrollmentRepository;
+@Mock private CourseRepository courseRepository;
+@Mock private LessonRepository lessonRepository;
+@Mock private LessonProgressRepository lessonProgressRepository;
+@Mock private AuthService authService;
 
-    @InjectMocks
-    private EnrollmentService enrollmentService;
+@InjectMocks
+private EnrollmentService enrollmentService;
 
-    private User student;
-    private Course course;
+private User student;
+private Course course;
 
-    @BeforeEach
-    void setup() {
-        MockitoAnnotations.openMocks(this);
-        student = new User();
-        student.setId(1L);
-        student.setUsername("john");
+@BeforeEach
+void setUp() {
+    MockitoAnnotations.openMocks(this);
 
-        course = new Course();
-        course.setId(10L);
-        course.setIsPublished(true);
-    }
+    student = new User();
+    student.setId(1L);
+    student.setUsername("john_student");
+    student.setRole(Role.STUDENT);
 
-    // ✅ Test enroll in course
-    @Test
-    void enrollInCourse_shouldEnrollSuccessfully() {
-        when(authService.getCurrentUser()).thenReturn(student);
-        when(courseRepository.findById(10L)).thenReturn(Optional.of(course));
-        when(enrollmentRepository.existsByStudentAndCourse(student, course)).thenReturn(false);
+    course = new Course();
+    course.setId(10L);
+    course.setTitle("Spring Boot Fundamentals");
+    course.setIsPublished(true);
+}
 
-        Lesson lesson = new Lesson();
-        lesson.setId(100L);
-        when(lessonRepository.findByCourseAndIsPublished(course, true)).thenReturn(List.of(lesson));
+// ==================== ENROLL IN COURSE TESTS ====================
 
-        Enrollment savedEnrollment = new Enrollment(student, course);
-        savedEnrollment.setId(500L);
-        when(enrollmentRepository.save(any(Enrollment.class))).thenReturn(savedEnrollment);
+@Test
+@DisplayName("Should enroll in course successfully")
+void enrollInCourse_WhenValidRequest_ShouldEnrollSuccessfully() {
+    // Arrange
+    when(authService.getCurrentUser()).thenReturn(student);
+    when(courseRepository.findById(10L)).thenReturn(Optional.of(course));
+    when(enrollmentRepository.existsByStudentAndCourse(student, course)).thenReturn(false);
 
-        EnrollmentDto dto = enrollmentService.enrollInCourse(10L);
+    Lesson lesson = new Lesson();
+    lesson.setId(100L);
+    when(lessonRepository.findByCourseAndIsPublished(course, true))
+            .thenReturn(List.of(lesson));
 
-        assertEquals(savedEnrollment.getId(), dto.getId());
-        verify(lessonProgressRepository, times(1)).save(any(LessonProgress.class));
-    }
+    Enrollment savedEnrollment = new Enrollment(student, course);
+    savedEnrollment.setId(500L);
+    when(enrollmentRepository.save(any(Enrollment.class))).thenReturn(savedEnrollment);
 
-    // ❌ Course not found
-    @Test
-    void enrollInCourse_shouldThrowWhenCourseNotFound() {
-        when(courseRepository.findById(10L)).thenReturn(Optional.empty());
-        assertThrows(RuntimeException.class, () -> enrollmentService.enrollInCourse(10L));
-    }
+    // Act
+    EnrollmentDto result = enrollmentService.enrollInCourse(10L);
 
-    // ❌ Already enrolled
-    @Test
-    void enrollInCourse_shouldThrowWhenAlreadyEnrolled() {
-        when(authService.getCurrentUser()).thenReturn(student);
-        when(courseRepository.findById(10L)).thenReturn(Optional.of(course));
-        when(enrollmentRepository.existsByStudentAndCourse(student, course)).thenReturn(true);
+    // Assert
+    assertNotNull(result, "EnrollmentDto should not be null");
+    assertEquals(savedEnrollment.getId(), result.getId(), "Enrollment ID should match");
+    verify(lessonProgressRepository, times(1)).save(any(LessonProgress.class));
+    verify(enrollmentRepository, times(1)).save(any(Enrollment.class));
+}
 
-        assertThrows(RuntimeException.class, () -> enrollmentService.enrollInCourse(10L));
-    }
+@Test
+@DisplayName("Should throw when course not found")
+void enrollInCourse_WhenCourseNotFound_ShouldThrowException() {
+    // Arrange
+    when(courseRepository.findById(10L)).thenReturn(Optional.empty());
 
-    // ✅ Unenroll
-    @Test
-    void unenrollFromCourse_shouldDeleteEnrollment() {
-        when(authService.getCurrentUser()).thenReturn(student);
-        when(courseRepository.findById(10L)).thenReturn(Optional.of(course));
+    // Act & Assert
+    RuntimeException ex = assertThrows(RuntimeException.class,
+            () -> enrollmentService.enrollInCourse(10L),
+            "Expected RuntimeException when course not found");
 
-        Enrollment enrollment = new Enrollment(student, course);
-        when(enrollmentRepository.findByStudentAndCourse(student, course))
-                .thenReturn(Optional.of(enrollment));
+    assertTrue(ex.getMessage().toLowerCase().contains("not found"));
+    verify(enrollmentRepository, never()).save(any());
+}
 
-        enrollmentService.unenrollFromCourse(10L);
+@Test
+@DisplayName("Should throw when already enrolled")
+void enrollInCourse_WhenAlreadyEnrolled_ShouldThrowException() {
+    // Arrange
+    when(authService.getCurrentUser()).thenReturn(student);
+    when(courseRepository.findById(10L)).thenReturn(Optional.of(course));
+    when(enrollmentRepository.existsByStudentAndCourse(student, course)).thenReturn(true);
 
-        verify(enrollmentRepository, times(1)).delete(enrollment);
-    }
+    // Act & Assert
+    RuntimeException ex = assertThrows(RuntimeException.class,
+            () -> enrollmentService.enrollInCourse(10L),
+            "Expected RuntimeException when already enrolled");
+
+    assertTrue(ex.getMessage().toLowerCase().contains("already"));
+    verify(enrollmentRepository, never()).save(any());
+}
+
+@Test
+@DisplayName("Should throw when course is unpublished")
+void enrollInCourse_WhenCourseUnpublished_ShouldThrowException() {
+    // Arrange
+    course.setIsPublished(false);
+    when(authService.getCurrentUser()).thenReturn(student);
+    when(courseRepository.findById(10L)).thenReturn(Optional.of(course));
+
+    // Act & Assert
+    RuntimeException ex = assertThrows(RuntimeException.class,
+            () -> enrollmentService.enrollInCourse(10L),
+            "Expected RuntimeException when course is unpublished");
+
+    assertTrue(ex.getMessage().toLowerCase().contains("unpublished"));
+    verify(enrollmentRepository, never()).save(any());
+}
+
+// ==================== UNENROLL FROM COURSE TESTS ====================
+
+@Test
+@DisplayName("Should unenroll from course successfully")
+void unenrollFromCourse_WhenEnrolled_ShouldDeleteEnrollment() {
+    // Arrange
+    when(authService.getCurrentUser()).thenReturn(student);
+    when(courseRepository.findById(10L)).thenReturn(Optional.of(course));
+
+    Enrollment enrollment = new Enrollment(student, course);
+    when(enrollmentRepository.findByStudentAndCourse(student, course))
+            .thenReturn(Optional.of(enrollment));
+
+    // Act
+    enrollmentService.unenrollFromCourse(10L);
+
+    // Assert
+    verify(enrollmentRepository, times(1)).delete(enrollment);
+}
+
+@Test
+@DisplayName("Should throw when unenrolling without enrollment")
+void unenrollFromCourse_WhenNotEnrolled_ShouldThrowException() {
+    // Arrange
+    when(authService.getCurrentUser()).thenReturn(student);
+    when(courseRepository.findById(10L)).thenReturn(Optional.of(course));
+    when(enrollmentRepository.findByStudentAndCourse(student, course))
+            .thenReturn(Optional.empty());
+
+    // Act & Assert
+    RuntimeException ex = assertThrows(RuntimeException.class,
+            () -> enrollmentService.unenrollFromCourse(10L),
+            "Expected RuntimeException when not enrolled");
+
+    assertTrue(ex.getMessage().toLowerCase().contains("not enrolled"));
+    verify(enrollmentRepository, never()).delete(any());
+}
+
+@Test
+@DisplayName("Should throw when unenrolling and course not found")
+void unenrollFromCourse_WhenCourseNotFound_ShouldThrowException() {
+    // Arrange
+    when(authService.getCurrentUser()).thenReturn(student);
+    when(courseRepository.findById(10L)).thenReturn(Optional.empty());
+
+    // Act & Assert
+    RuntimeException ex = assertThrows(RuntimeException.class,
+            () -> enrollmentService.unenrollFromCourse(10L),
+            "Expected RuntimeException when course not found during unenroll");
+
+    assertTrue(ex.getMessage().toLowerCase().contains("not found"));
+    verify(enrollmentRepository, never()).delete(any());
+}
 }
