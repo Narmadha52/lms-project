@@ -153,7 +153,7 @@ public class LessonProgress {
 		
 	}
 
-	public BooleanSupplier getCompleted() {
+	public Boolean getCompleted() {
 		// TODO Auto-generated method stub
 		return null;
 	}
