@@ -2,7 +2,7 @@ package com.lms.config;
 
 import com.lms.service.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value; // Used for dynamic config
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -38,15 +38,8 @@ public class WebSecurityConfig {
     @Autowired
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    // -----------------------------------------------------------------
-    // CRITICAL FIX: Use the 'cors.allowed.origins' property name
-    // -----------------------------------------------------------------
     @Value("${cors.allowed.origins}")
     private String allowedOriginsConfig;
-
-    // We can also use @Value to inject other CORS properties if needed,
-    // but manually defining them here is simpler as they are static.
-    // -----------------------------------------------------------------
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -70,23 +63,33 @@ public class WebSecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Dynamically set allowed origins based on property (e.g., "http://localhost:3000,https://prod-frontend.com")
-        // Note: We use trim() and filter to handle potential whitespace or empty strings.
+        // Parse allowed origins from properties
         List<String> allowedOrigins = Arrays.stream(allowedOriginsConfig.split(","))
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
                 .toList();
 
         configuration.setAllowedOrigins(allowedOrigins);
-
         configuration.setAllowCredentials(true);
-        // Using List.of() to match the methods defined in your properties: GET, POST, PUT, DELETE, OPTIONS
-        configuration.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS","PATCH"));
-
-        // Using wildcard for headers as defined in your properties: cors.allowed.headers=*
-        configuration.setAllowedHeaders(List.of("*"));
-
-        configuration.setExposedHeaders(List.of("Authorization"));
+        
+        // Allow all common HTTP methods
+        configuration.setAllowedMethods(Arrays.asList(
+            "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"
+        ));
+        
+        // Allow all headers
+        configuration.setAllowedHeaders(Arrays.asList("*"));
+        
+        // Expose headers that frontend might need
+        configuration.setExposedHeaders(Arrays.asList(
+            "Authorization", 
+            "Content-Type",
+            "Access-Control-Allow-Origin",
+            "Access-Control-Allow-Credentials"
+        ));
+        
+        // Cache preflight response for 1 hour
+        configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
@@ -96,39 +99,39 @@ public class WebSecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .cors(Customizer.withDefaults()) // Uses the CorsConfigurationSource bean defined above
-
+                // IMPORTANT: CORS must be configured BEFORE other security settings
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                
                 .csrf(AbstractHttpConfigurer::disable)
-                .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                
+                .exceptionHandling(exception -> 
+                    exception.authenticationEntryPoint(unauthorizedHandler)
+                )
+                
+                .sessionManagement(session -> 
+                    session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+                
+                .authorizeHttpRequests(authz -> authz
+                    // Allow preflight requests
+                    .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                    
+                    // Public endpoints
+                    .requestMatchers(
+                        "/auth/signin",
+                        "/auth/signup",
+                        "/auth/hello",
+                        "/actuator/**",
+                        "/health",
+                        "/api/health"
+                    ).permitAll()
+                    
+                    // For testing - you can restrict this later
+                    .anyRequest().permitAll()
+                );
 
-        //         .authorizeHttpRequests(authz -> authz
-        //                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-        //                 .requestMatchers("/auth/signin", "/auth/signup","/auth/hello").permitAll()
-        //                 .requestMatchers(
-        //                         "/actuator/**",
-        //                         "/health",
-        //                         "/api/health"
-        //                 ).permitAll()
-
-
-        //                 // Frontend routing URLs
-        //                 .requestMatchers("/", "/dashboard", "/courses", "/my-courses", "/assignments", "/quizzes", "/achievements", "/profile").permitAll()
-
-        //                 // Static resources and documentation
-        //                 .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
-        //                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-
-        //                 .anyRequest().authenticated()
-        //         );
-
-        // http.authenticationProvider(authenticationProvider());
-        // http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-
-            .authorizeHttpRequests(authz -> authz
-                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .anyRequest().permitAll() 
-            );
+        http.authenticationProvider(authenticationProvider());
+        http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
