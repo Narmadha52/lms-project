@@ -1,5 +1,6 @@
 import React from 'react';
 import { Calendar, Clock, CheckCircle, XCircle, Award, Bell, User, Lock, Palette, Globe } from 'lucide-react';
+import { Quizzes } from './complete-components';
 
 export const Quizzes = () => {
   const [activeQuiz, setActiveQuiz] = useState(null);
@@ -239,3 +240,5 @@ export const Quizzes = () => {
     </div>
   );
 };
+
+export default Quizzes;
