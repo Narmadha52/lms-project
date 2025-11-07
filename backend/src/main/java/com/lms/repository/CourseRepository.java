@@ -40,8 +40,9 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
            "c.price BETWEEN :minPrice AND :maxPrice")
     List<Course> findByPriceRange(@Param("minPrice") BigDecimal minPrice, @Param("maxPrice") BigDecimal maxPrice);
     
-    @Query("SELECT c FROM Course c WHERE c.isPublished = true AND c.price = 0")
-    List<Course> findFreeCourses();
+   @Query("SELECT c FROM Course c WHERE c.isPublished = true AND c.price = 0.00")
+List<Course> findFreeCourses();
+
     
     @Query("SELECT c FROM Course c WHERE c.isPublished = true AND c.price > 0")
     List<Course> findPaidCourses();
