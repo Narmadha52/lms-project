@@ -152,27 +152,27 @@ const Sidebar = () => {
           path: '/admin',
           description: 'System administration'
         },
-        {
-          id: 'user-management',
-          label: 'User Management',
-          icon: FiUsers,
-          path: '/admin/users',
-          description: 'Manage users and roles'
-        },
-        {
-          id: 'system-analytics',
-          label: 'System Analytics',
-          icon: FiTrendingUp,
-          path: '/admin/analytics',
-          description: 'Platform-wide insights'
-        },
-        {
-          id: 'system-settings',
-          label: 'System Settings',
-          icon: FiCog,
-          path: '/admin/settings',
-          description: 'Configure platform settings'
-        }
+        // {
+        //   id: 'user-management',
+        //   label: 'User Management',
+        //   icon: FiUsers,
+        //   path: '/admin/users',
+        //   description: 'Manage users and roles'
+        // },
+        // {
+        //   id: 'system-analytics',
+        //   label: 'System Analytics',
+        //   icon: FiTrendingUp,
+        //   path: '/admin/analytics',
+        //   description: 'Platform-wide insights'
+        // },
+        // {
+        //   id: 'system-settings',
+        //   label: 'System Settings',
+        //   icon: FiCog,
+        //   path: '/admin/settings',
+        //   description: 'Configure platform settings'
+        // }
       );
     }
 
