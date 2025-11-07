@@ -1,7 +1,7 @@
 import React from 'react';
 import { Calendar, Clock, CheckCircle, XCircle, Award, Bell, User, Lock, Palette, Globe } from 'lucide-react';
 
-const Quizzes = () => {
+export const Quizzes = () => {
   const [activeQuiz, setActiveQuiz] = useState(null);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [score, setScore] = useState(0);
