@@ -1,10 +1,10 @@
 import React from 'react';
 import { Calendar, Clock, CheckCircle, XCircle, Award, Bell, User, Lock, Palette, Globe } from 'lucide-react';
+import { Schedule } from './complete-components';
 
-
-const Schedule = () => {
+export const Schedule = () => {
   const [view, setView] = useState('week');
-  const [events, setEvents] = useState([
+  const [events] = useState([
     { id: 1, title: 'React Advanced Patterns', type: 'lesson', date: '2025-11-08', time: '10:00 AM', duration: '1h 30m', instructor: 'Sarah Johnson' },
     { id: 2, title: 'JavaScript Quiz', type: 'quiz', date: '2025-11-08', time: '2:00 PM', duration: '30m', questions: 15 },
     { id: 3, title: 'CSS Grid Workshop', type: 'lesson', date: '2025-11-09', time: '3:00 PM', duration: '2h', instructor: 'Mike Chen' },
@@ -96,3 +96,5 @@ const Schedule = () => {
     </div>
   );
 };
+
+export default Schedule;
