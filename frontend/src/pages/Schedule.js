@@ -1,6 +1,5 @@
 import React from 'react';
 import { Calendar, Clock, CheckCircle, XCircle, Award, Bell, User, Lock, Palette, Globe } from 'lucide-react';
-import { Schedule } from './complete-components';
 
 export const Schedule = () => {
   const [view, setView] = useState('week');
